@@ -1,6 +1,6 @@
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, Write};
 // Uncomment this block to pass the first stage
-use std::net::TcpListener;
+use std::net::{TcpListener, TcpStream};
 use regex::Regex;
 
 const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
@@ -18,11 +18,10 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut _stream) => {
-                let mut buf: Vec<u8> = vec![];
-                _stream.read_to_end(&mut buf).unwrap();
-                let req = String::from_utf8_lossy(&buf);
-                let header = req.lines().next().unwrap();
-                let path = parse_http_header(header).unwrap();
+                let mut reader: BufReader<TcpStream> = BufReader::new(_stream.try_clone().unwrap());
+                let mut header = String::new();
+                reader.read_line(&mut header).unwrap();
+                let path = parse_http_header(header.as_str()).unwrap();
                 if path == "/" {
                     _stream.write_all(HTTP_OK.as_bytes()).unwrap();
                 } else {
