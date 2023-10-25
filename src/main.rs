@@ -3,7 +3,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use regex::Regex;
 
-//const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
+const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
 const HTTP_NOT_FOUND: &str = "HTTP/1.1 404 Not Found\r\n\r\n";
 
 
@@ -28,6 +28,8 @@ fn main() {
                     println!("Response:");
                     println!("{}", resp);
                     _stream.write_all(resp.as_bytes()).unwrap();
+                } else if path == "/" {
+                    _stream.write_all(HTTP_OK.as_bytes()).unwrap();
                 } else {
                     _stream.write_all(HTTP_NOT_FOUND.as_bytes()).unwrap();
                 }
