@@ -19,18 +19,14 @@ fn main() {
         match stream {
             Ok(mut _stream) => {
                 let mut buf: Vec<u8> = vec![];
-                let req = _stream.read_to_end(&mut buf).unwrap();
-                for (i, line) in req.to_string().lines().enumerate() {
-                    if i == 0 {
-                        let re = Regex::new(r"GET (.*) HTTP/1.1").unwrap();
-                        let cap = re.captures(line).unwrap();
-                        let path = cap.get(1).unwrap().as_str();
-                        if path == "/" {
-                            _stream.write_all(HTTP_OK.as_bytes()).unwrap();
-                        } else {
-                            _stream.write_all(HTTP_NOT_FOUND.as_bytes()).unwrap();
-                        }
-                    }
+                _stream.read_to_end(&mut buf).unwrap();
+                let req = String::from_utf8_lossy(&buf);
+                let header = req.lines().next().unwrap();
+                let path = parse_http_header(header).unwrap();
+                if path == "/" {
+                    _stream.write_all(HTTP_OK.as_bytes()).unwrap();
+                } else {
+                    _stream.write_all(HTTP_NOT_FOUND.as_bytes()).unwrap();
                 }
             }
             Err(e) => {
@@ -38,4 +34,11 @@ fn main() {
             }
         }
     }
+}
+
+fn parse_http_header(header: &str) -> Option<String> {
+    let re = Regex::new(r"GET (.*) HTTP/1.1").unwrap();
+    let cap = re.captures(header)?;
+    let path = cap.get(1)?;
+    Some(path.as_str().to_string())
 }
