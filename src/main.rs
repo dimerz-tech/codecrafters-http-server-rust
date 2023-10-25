@@ -22,11 +22,8 @@ fn main() {
                 let mut header = String::new();
                 reader.read_line(&mut header).unwrap();
                 let path = parse_http_header(header.as_str()).unwrap();
-                if path == "/" {
-                    _stream.write_all(HTTP_OK.as_bytes()).unwrap();
-                } else {
-                    _stream.write_all(HTTP_NOT_FOUND.as_bytes()).unwrap();
-                }
+                let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", path.len(), path);
+                _stream.write_all(resp.as_bytes()).unwrap();
             }
             Err(e) => {
                 println!("error: {}", e);
@@ -36,7 +33,7 @@ fn main() {
 }
 
 fn parse_http_header(header: &str) -> Option<String> {
-    let re = Regex::new(r"GET (.*) HTTP/1.1").unwrap();
+    let re = Regex::new(r"GET /echo/(.*) HTTP/1.1").unwrap();
     let cap = re.captures(header)?;
     let path = cap.get(1)?;
     Some(path.as_str().to_string())
