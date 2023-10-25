@@ -1,4 +1,4 @@
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 // Uncomment this block to pass the first stage
 use std::net::{TcpListener, TcpStream};
 use regex::Regex;
@@ -25,12 +25,17 @@ fn main() {
                 if path.starts_with("/echo/") {
                     let res = &path.as_str()["/echo/".len()..];
                     let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", res.len(), res);
-                    println!("Response:");
-                    println!("{}", resp);
                     _stream.write_all(resp.as_bytes()).unwrap();
                 } else if path == "/" {
                     _stream.write_all(HTTP_OK.as_bytes()).unwrap();
-                } else {
+                } else if path == "/user-agent" {
+                    let mut content = String::new();
+                    reader.read_to_string(&mut content).unwrap();
+                    let agent = parse_user_agent(content.as_str()).unwrap();
+                    let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", agent.len(), agent);
+                    _stream.write_all(resp.as_bytes()).unwrap();
+                }
+                else {
                     _stream.write_all(HTTP_NOT_FOUND.as_bytes()).unwrap();
                 }
             }
@@ -46,4 +51,11 @@ fn parse_http_header(header: &str) -> Option<String> {
     let cap = re.captures(header)?;
     let path = cap.get(1)?;
     Some(path.as_str().to_string())
+}
+
+fn parse_user_agent(content: &str) -> Option<String> {
+    let re = Regex::new(r"^User-Agent: (.*)$").unwrap();
+    let cap = re.captures(content)?;
+    let result = cap.get(1)?;
+    Some(result.as_str().to_string())
 }
