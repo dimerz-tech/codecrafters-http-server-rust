@@ -3,7 +3,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use regex::Regex;
 
-const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
+//const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
 const HTTP_NOT_FOUND: &str = "HTTP/1.1 404 Not Found\r\n\r\n";
 
 
@@ -22,8 +22,15 @@ fn main() {
                 let mut header = String::new();
                 reader.read_line(&mut header).unwrap();
                 let path = parse_http_header(header.as_str()).unwrap();
-                let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", path.len(), path);
-                _stream.write_all(resp.as_bytes()).unwrap();
+                if path.starts_with("/echo/") {
+                    let res = &path.as_str()["/echo/".len()..];
+                    let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", res.len(), res);
+                    println!("Response:");
+                    println!("{}", resp);
+                    _stream.write_all(resp.as_bytes()).unwrap();
+                } else {
+                    _stream.write_all(HTTP_NOT_FOUND.as_bytes()).unwrap();
+                }
             }
             Err(e) => {
                 println!("error: {}", e);
@@ -33,7 +40,7 @@ fn main() {
 }
 
 fn parse_http_header(header: &str) -> Option<String> {
-    let re = Regex::new(r"GET /echo/(.*) HTTP/1.1").unwrap();
+    let re = Regex::new(r"GET (.*) HTTP/1.1").unwrap();
     let cap = re.captures(header)?;
     let path = cap.get(1)?;
     Some(path.as_str().to_string())
