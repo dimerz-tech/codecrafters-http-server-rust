@@ -3,6 +3,7 @@ use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWrit
 use regex::Regex;
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::fs::File;
+use std::env;
 
 const HTTP_OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
 const HTTP_NOT_FOUND: &str = "HTTP/1.1 404 Not Found\r\n\r\n";
@@ -53,7 +54,9 @@ async fn handle_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, write
             }
         },
         _ if path.starts_with("/files") => {
-            let file_path = &path["/files/".len()..];
+            let args: Vec<String> = env::args().collect();
+            let file_name = &path["/files/".len()..];
+            let file_path = format!("{}/{}", args.get(1).unwrap(), file_name);
             println!("File path {}", file_path);
             if let Ok(mut file) = File::open(file_path).await {
                 let mut content = String::new();
