@@ -56,7 +56,7 @@ async fn handle_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, write
         _ if path.starts_with("/files") => {
             let args: Vec<String> = env::args().collect();
             let file_name = &path["/files/".len()..];
-            let file_path = format!("{}/{}", args.get(1).unwrap(), file_name);
+            let file_path = format!("{}/{}", args.get(2).unwrap(), file_name);
             println!("File path {}", file_path);
             if let Ok(mut file) = File::open(file_path).await {
                 let mut content = String::new();
