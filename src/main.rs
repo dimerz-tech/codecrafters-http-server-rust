@@ -37,6 +37,7 @@ fn main() {
                             _stream.write_all(resp.as_bytes()).unwrap();
                             break;
                         }
+                        line.clear();
                     }
                 }
                 else {
