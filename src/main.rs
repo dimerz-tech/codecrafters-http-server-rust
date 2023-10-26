@@ -33,6 +33,7 @@ fn main() {
                     while let Ok(_) = reader.read_line(&mut line) {
                         println!("{}", line);
                         if let Some(agent) = parse_user_agent(line.as_str()) {
+                            println!("{}", agent);
                             let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", agent.len(), agent);
                             _stream.write_all(resp.as_bytes()).unwrap();
                             break;
