@@ -1,4 +1,4 @@
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Write};
 // Uncomment this block to pass the first stage
 use std::net::{TcpListener, TcpStream};
 use regex::Regex;
@@ -29,11 +29,14 @@ fn main() {
                 } else if path == "/" {
                     _stream.write_all(HTTP_OK.as_bytes()).unwrap();
                 } else if path == "/user-agent" {
-                    let mut content = String::new();
-                    reader.read_to_string(&mut content).unwrap();
-                    let agent = parse_user_agent(content.as_str()).unwrap();
-                    let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", agent.len(), agent);
-                    _stream.write_all(resp.as_bytes()).unwrap();
+                    let mut line = String::new();
+                    while let Ok(_) = reader.read_line(&mut line) {
+                        if let Some(agent) = parse_user_agent(line.as_str()) {
+                            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", agent.len(), agent);
+                            _stream.write_all(resp.as_bytes()).unwrap();
+                            break;
+                        }
+                    }
                 }
                 else {
                     _stream.write_all(HTTP_NOT_FOUND.as_bytes()).unwrap();
