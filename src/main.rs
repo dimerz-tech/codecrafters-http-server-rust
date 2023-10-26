@@ -59,7 +59,7 @@ fn parse_http_header(header: &str) -> Option<String> {
 }
 
 fn parse_user_agent(content: &str) -> Option<String> {
-    let re = Regex::new(r"User-Agent: (.*)").unwrap();
+    let re = Regex::new(r"User-Agent: (.*)$").unwrap();
     let cap = re.captures(content)?;
     let result = cap.get(1)?;
     Some(result.as_str().to_string())
