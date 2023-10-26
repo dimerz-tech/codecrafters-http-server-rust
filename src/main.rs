@@ -61,7 +61,7 @@ async fn handle_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, write
             if let Ok(mut file) = File::open(file_path).await {
                 let mut content = String::new();
                 file.read_to_string(&mut content).await.unwrap();
-                let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream; charset=utf-8\r\n\r\n{}", content);
+                let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\n\r\n{}", content);
                 writer.write_all(resp.as_bytes()).await.unwrap();
             } else {
                 writer.write_all(HTTP_NOT_FOUND.as_bytes()).await.unwrap();
