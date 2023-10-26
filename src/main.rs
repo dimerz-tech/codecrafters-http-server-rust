@@ -69,7 +69,6 @@ async fn process(stream: TcpStream) {
     let mut writer = BufWriter::new(write);
     let mut header = String::new();
     reader.read_line(&mut header).await.unwrap();
-    println!("Header {}", header);
     let path = parse_http_line(header.as_str(), r"GET (.*) HTTP/1.1").unwrap();
     handle_request(path.as_str(), &mut reader, &mut writer).await;
 }
@@ -101,6 +100,7 @@ async fn handle_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, write
             writer.write_all(HTTP_NOT_FOUND.as_bytes()).await.unwrap();
         }
     }
+    writer.flush().await.unwrap();
 }
 
 fn parse_http_line(line: &str, re: &str) -> Option<String> {
