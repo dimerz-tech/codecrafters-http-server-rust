@@ -54,6 +54,7 @@ async fn handle_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, write
         },
         _ if path.starts_with("/files") => {
             let file_path = &path["/files/".len()..];
+            println!("File path {}", file_path);
             if let Ok(mut file) = File::open(file_path).await {
                 let mut content = String::new();
                 file.read_to_string(&mut content).await.unwrap();
