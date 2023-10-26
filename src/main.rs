@@ -31,9 +31,7 @@ fn main() {
                 } else if path == "/user-agent" {
                     let mut line = String::new();
                     while let Ok(_) = reader.read_line(&mut line) {
-                        println!("{}", line);
                         if let Some(agent) = parse_user_agent(line.as_str()) {
-                            println!("{}", agent);
                             let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", agent.len(), agent);
                             _stream.write_all(resp.as_bytes()).unwrap();
                             break;
@@ -63,5 +61,5 @@ fn parse_user_agent(content: &str) -> Option<String> {
     let re = Regex::new(r"User-Agent: (.*)\n").unwrap();
     let cap = re.captures(content)?;
     let result = cap.get(1)?;
-    Some(result.as_str().to_string())
+    Some(result.as_str().to_string().trim().to_string())
 }
