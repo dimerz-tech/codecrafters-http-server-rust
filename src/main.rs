@@ -26,11 +26,16 @@ async fn process(stream: TcpStream) {
     let mut writer = BufWriter::new(write);
     let mut header = String::new();
     reader.read_line(&mut header).await.unwrap();
-    let path = parse_http_line(header.as_str(), r"GET (.*) HTTP/1.1").unwrap();
-    handle_request(path.as_str(), &mut reader, &mut writer).await;
+    if let Some(path) = parse_http_line(header.as_str(), r"GET (.*) HTTP/1.1") {
+        handle_get_request(path.as_str(), &mut reader, &mut writer).await;
+    } else if let Some(path) = parse_http_line(header.as_str(), r"POST (.*) HTTP/1.1") {
+        handle_post_request(path.as_str(), &mut reader, &mut writer).await;
+    } else {
+        println!("Not implemented");
+    }
 }
 
-async fn handle_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, writer: &mut BufWriter<OwnedWriteHalf>) {
+async fn handle_get_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, writer: &mut BufWriter<OwnedWriteHalf>) {
     match path {
         "/" => {
             writer.write_all(HTTP_OK.as_bytes()).await.unwrap();
@@ -72,6 +77,43 @@ async fn handle_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, write
         }
     }
     writer.flush().await.unwrap();
+}
+
+async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, writer: &mut BufWriter<OwnedWriteHalf>) {
+    match path {
+        _ if path.starts_with("/files") => {
+            let mut line = String::new();
+            let content_length;
+            loop {
+                reader.read_line(&mut line).await.unwrap();
+                if line.starts_with("Content-Length") {
+                    content_length = parse_http_line(line.as_str(), r"Content-Length: (.*)\n").unwrap().parse().unwrap();
+                    reader.read_line(&mut line).await.unwrap();
+                    reader.read_line(&mut line).await.unwrap();
+                    line.clear();
+                    break;
+                }
+                line.clear();
+            }
+            let mut content = String::new();
+            loop {
+                reader.read_line(&mut line).await.unwrap();
+                content.push_str(line.as_str());
+                println!("Content len = {}", content.len());
+                if content.len() == content_length {
+                    let args: Vec<String> = env::args().collect();
+                    let file_name = &path["/files/".len()..];
+                    let file_path = format!("{}{}", args.get(2).unwrap(), file_name);
+                    let mut file = File::create(file_path).await.unwrap();
+                    file.write_all(content.as_bytes()).await.unwrap();
+                    writer.write_all("HTTP/1.1 201 OK\r\n\r\n".as_bytes()).await.unwrap();
+                }
+            }
+        },
+        _ => {
+            writer.write_all(HTTP_NOT_FOUND.as_bytes()).await.unwrap();
+        }
+    }
 }
 
 fn parse_http_line(line: &str, re: &str) -> Option<String> {
