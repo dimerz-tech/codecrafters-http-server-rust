@@ -83,6 +83,7 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
     match path {
         _ if path.starts_with("/files") => {
             writer.write_all("HTTP/1.1 201 OK\r\n\r\n".as_bytes()).await.unwrap();
+            writer.flush().await.unwrap();
             println!("Response sent");
             let mut line = String::new();
             let content_length;
