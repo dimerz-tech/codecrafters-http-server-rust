@@ -85,6 +85,7 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
             let mut line = String::new();
             let content_length;
             loop {
+                line.clear();
                 reader.read_line(&mut line).await.unwrap();
                 if line.starts_with("Content-Length") {
                     content_length = parse_http_line(line.as_str(), r"Content-Length: (.*)\n").unwrap().parse().unwrap();
@@ -93,13 +94,15 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
                     line.clear();
                     break;
                 }
-                line.clear();
+                println!("Line: {}", line);
             }
             let mut content = String::new();
             loop {
+                line.clear();
                 reader.read_line(&mut line).await.unwrap();
                 content.push_str(line.as_str());
                 println!("Content len = {}", content.len());
+                println!("{}", content);
                 if content.len() == content_length {
                     let args: Vec<String> = env::args().collect();
                     let file_name = &path["/files/".len()..];
@@ -114,6 +117,7 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
             writer.write_all(HTTP_NOT_FOUND.as_bytes()).await.unwrap();
         }
     }
+    writer.flush().await.unwrap();
 }
 
 fn parse_http_line(line: &str, re: &str) -> Option<String> {
