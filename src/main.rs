@@ -82,6 +82,8 @@ async fn handle_get_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, w
 async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, writer: &mut BufWriter<OwnedWriteHalf>) {
     match path {
         _ if path.starts_with("/files") => {
+            writer.write_all("HTTP/1.1 201 OK\r\n\r\n".as_bytes()).await.unwrap();
+            println!("Response sent");
             let mut line = String::new();
             let content_length;
             loop {
@@ -116,8 +118,6 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
                     println!("File created: {:?}", file);
                     file.write_all(content.as_bytes()).await.unwrap();
                     println!("Text written to file");
-                    writer.write_all("HTTP/1.1 201 OK\r\n\r\n".as_bytes()).await.unwrap();
-                    println!("Response sent");
                 }
             }
         },
