@@ -90,7 +90,10 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
                 if line.starts_with("Content-Length") {
                     content_length = parse_http_line(line.as_str(), r"Content-Length: (.*)\n").unwrap().parse().unwrap();
                     println!("Expected content len: {}", content_length);
+                    line.clear();
                     reader.read_line(&mut line).await.unwrap();
+                    println!("{}", line);
+                    line.clear();
                     reader.read_line(&mut line).await.unwrap();
                     println!("{}", line);
                     break;
