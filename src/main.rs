@@ -87,42 +87,31 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
             loop {
                 line.clear();
                 reader.read_line(&mut line).await.unwrap();
-                println!("Line: {}", line);
                 if line.starts_with("Content-Length") {
                     content_length = parse_http_line(line.as_str(), r"Content-Length: (.*)\n").unwrap().parse().unwrap();
-                    println!("Expected content len: {}", content_length);
                     line.clear();
-                    reader.read_line(&mut line).await.unwrap();
-                    println!("{}", line);
+                    reader.read_line(&mut line).await.unwrap(); // This is for content type reading
                     break;
                 }
             }
-            let mut content = String::new();
-            loop {
-                line.clear();
-                println!("Before Line: {}", line);
-                reader.read_line(&mut line).await.unwrap();
-                println!("Line: {}", line);
-                if line == "\r\n" {
-                    continue;
-                }
-                content.push_str(line.as_str());
-                println!("Content len = {}", content.len());
-                println!("{}", content);
-                if content.len() == content_length {
-                    let args: Vec<String> = env::args().collect();
-                    let file_name = &path["/files/".len()..];
-                    let file_path = format!("{}{}", args.get(2).unwrap(), file_name);
-                    println!("File path: {}", file_path);
-                    let mut file = File::create(file_path).await.unwrap();
-                    println!("File created: {:?}", file);
-                    file.write_all(content.as_bytes()).await.unwrap();
-                    println!("Text written to file");
-                    writer.write_all("HTTP/1.1 201 OK\r\n\r\n".as_bytes()).await.unwrap();
-                    println!("Response sent");
-                    break;
-                }
-            }
+            let mut buf = [0u8; 2]; // That is for CRLF
+            reader.read_exact(&mut buf).await.unwrap();
+
+            let mut buf = vec![0u8; content_length];
+            reader.read_exact(&mut buf).await.unwrap();
+            let body = String::from_utf8_lossy(buf.as_slice()).to_string();
+
+            println!("{}", String::from_utf8_lossy(&buf));
+            let args: Vec<String> = env::args().collect();
+            let file_name = &path["/files/".len()..];
+            let file_path = format!("{}{}", args.get(2).unwrap(), file_name);
+            println!("File path: {}", file_path);
+            let mut file = File::create(file_path).await.unwrap();
+            println!("File created: {:?}", file);
+            file.write_all(body.as_bytes()).await.unwrap();
+            println!("Text written to file");
+            writer.write_all("HTTP/1.1 201 OK\r\n\r\n".as_bytes()).await.unwrap();
+            println!("Response sent");
         },
         _ => {
             writer.write_all(HTTP_NOT_FOUND.as_bytes()).await.unwrap();
