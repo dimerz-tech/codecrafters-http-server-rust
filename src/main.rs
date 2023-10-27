@@ -108,6 +108,7 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
                     let args: Vec<String> = env::args().collect();
                     let file_name = &path["/files/".len()..];
                     let file_path = format!("{}{}", args.get(2).unwrap(), file_name);
+                    println!("File path: {}", file_path);
                     let mut file = File::create(file_path).await.unwrap();
                     println!("File created: {:?}", file);
                     file.write_all(content.as_bytes()).await.unwrap();
