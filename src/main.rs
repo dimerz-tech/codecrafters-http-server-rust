@@ -87,6 +87,7 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
             loop {
                 line.clear();
                 reader.read_line(&mut line).await.unwrap();
+                println!("Line: {}", line);
                 if line.starts_with("Content-Length") {
                     content_length = parse_http_line(line.as_str(), r"Content-Length: (.*)\n").unwrap().parse().unwrap();
                     println!("Expected content len: {}", content_length);
@@ -96,11 +97,8 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
                     line.clear();
                     reader.read_line(&mut line).await.unwrap();
                     println!("{}", line);
-                    reader.read_line(&mut line).await.unwrap();
-                    println!("{}", line);
                     break;
                 }
-                println!("Line: {}", line);
             }
             let mut content = String::new();
             loop {
