@@ -109,8 +109,11 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
                     let file_name = &path["/files/".len()..];
                     let file_path = format!("{}{}", args.get(2).unwrap(), file_name);
                     let mut file = File::create(file_path).await.unwrap();
+                    println!("File created: {:?}", file);
                     file.write_all(content.as_bytes()).await.unwrap();
+                    println!("Text written to file");
                     writer.write_all("HTTP/1.1 201 OK\r\n\r\n".as_bytes()).await.unwrap();
+                    println!("Response sent");
                 }
             }
         },
