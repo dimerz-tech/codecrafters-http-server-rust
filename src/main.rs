@@ -92,7 +92,7 @@ async fn handle_post_request(path: &str, reader: &mut BufReader<OwnedReadHalf>, 
                     println!("Expected content len: {}", content_length);
                     reader.read_line(&mut line).await.unwrap();
                     reader.read_line(&mut line).await.unwrap();
-                    line.clear();
+                    println!("{}", line);
                     break;
                 }
                 println!("Line: {}", line);
